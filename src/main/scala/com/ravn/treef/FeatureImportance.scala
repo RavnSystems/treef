@@ -20,8 +20,8 @@ object FeatureImportance extends App {
       TimeOfTheDay, MatchingWord)
   val featuresMap = featuresList.map(f => (f.i, f)).toMap
 
-//  val example = "0 qid:1933 1:0 2:10 3:1 4:0 # ccded589-a205-49c9-9c5a-1249083dd3eb"
-//  val datapoint = DataPointReader.convert(example, features)
+//  val example = "0 qid:1933 1:1000 2:10 3:1 4:1 5:0 # ccded589-a205-49c9-9c5a-1249083dd3eb"
+//  val datapoint = DataPointReader.convert(example, featuresMap)
 
   val dataPoints = DataPointReader.slurp("/tmp/rank_valid.txt", featuresMap)
 
@@ -33,18 +33,25 @@ object FeatureImportance extends App {
     .asInstanceOf[LambdaMART]
 
   val ensemble = EnsembleBuilder.buildEnsemble(ranker.getEnsemble, featuresMap)
+//  println(ensemble.compute(datapoint))
+
+  val gini = new GiniImportance(featuresList)
+  val decrease = gini.perform(ensemble, dataPoints)
+
+  gini.print(decrease)
 
 //  val r = ensemble.evaluate(datapoint)
 //  dataPoints.foreach(dp => {if (ensemble.evaluate(dp)._1>0) println(dp.get(EnsembleBuilder.entityType))})
 
+  /*
   def countFeatures(features : List[Feature], acc : scala.collection.mutable.Map[Feature, Int]) = {
     features.foreach(feature => {acc(feature) = acc(feature) + 1})
   }
 
   val acc = scala.collection.mutable.Map() ++ featuresList.map(f => (f, 0)).toMap
-  dataPoints.foreach(dp => countFeatures(ensemble.evaluate(dp)._2, acc))
+  dataPoints.foreach(dp => countFeatures(ensemble.compute(dp)._2, acc))
 
   val n : Double = dataPoints.size
-  acc.foreach( e => println(e._1.label + " : " + (e._2 / n )))
+  acc.foreach( e => println(e._1.label + " : " + (e._2 / n )))*/
 
 }

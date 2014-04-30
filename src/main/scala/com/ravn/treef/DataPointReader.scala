@@ -16,6 +16,7 @@ object DataPointReader {
 
   def convert(dataPointS : String, features : Map[Int, Feature]) : DataPoint = {
 
+    // TODO replace that explicit slice
     val rawFeatures : Array[Array[String]] =
       dataPointS.split(" ").slice(2,7).map(s => s.split(":"))
 

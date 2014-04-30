@@ -8,36 +8,39 @@ import com.ravn.Feature
  */
 
 sealed trait TreeNode {
-  def evaluate(features: DataPoint): (Double, List[Feature])
+  def evaluate(features: DataPoint): List[TreeNode]
 }
 
-class Ensemble(trees: Seq[Tree]) extends TreeNode {
-  override def evaluate(features: DataPoint): (Double, List[Feature]) = {
-    val results = trees.map(tree => tree.evaluate(features))
-    val score = results.map(result => result._1).sum / trees.length
-    val usedFeatures = results.map(result => result._2).flatten
+sealed trait Scorer {
+  def compute(features: DataPoint): Double
+}
 
-    (score, usedFeatures.toList)
+class Ensemble(val trees: Seq[Tree]) extends Scorer {
+
+  override def compute(features: DataPoint): Double = {
+    trees.map(tree => tree.compute(features)).sum / trees.size
   }
 }
 
-class Tree(weight: Double, root : TreeNode) extends TreeNode {
-  override def evaluate(features: DataPoint): (Double, List[Feature]) = {
-    val result = root.evaluate(features)
-    (result._1 * weight, result._2)
-  }
+class Tree(val weight: Double, val root : TreeNode) extends /*TreeNode with */Scorer {
+  /*override def evaluate(features: DataPoint): List[TreeNode] = {
+    root.evaluate(features)
+  }*/
+
+  override def compute(features: DataPoint): Double =
+    weight * root.evaluate(features).last.asInstanceOf[Leaf].output
 }
 
-class Leaf(output: Double) extends TreeNode {
-  override def evaluate(features: DataPoint): (Double, List[Feature]) = (output, Nil)
+class Leaf(val output: Double) extends TreeNode {
+  override def evaluate(features: DataPoint): List[TreeNode] = this :: Nil
 }
 
-class Split(left: TreeNode,
-            right: TreeNode,
+class Split(val left: TreeNode,
+            val right: TreeNode,
             threshold: Double,
-            feature: Feature) extends TreeNode {
+            val feature: Feature) extends TreeNode {
 
-  override def evaluate(features: DataPoint): (Double, List[Feature]) = {
+  override def evaluate(features: DataPoint): List[TreeNode] = {
 
     val result =
       if (features.get(feature).get <= threshold)
@@ -45,7 +48,7 @@ class Split(left: TreeNode,
       else
         right.evaluate(features)
 
-    (result._1, feature :: result._2)
+    this :: result
   }
 }
 
