@@ -2,7 +2,6 @@ package com.ravn.treef
 
 import java.lang.reflect.Field
 import ciir.umass.edu.learning.tree.{Ensemble => LibEnsemble, Split => LibSplit, RegressionTree}
-import com.ravn.Feature
 
 /**
  * Created by remim on 11/04/14.

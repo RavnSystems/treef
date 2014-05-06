@@ -1,8 +1,5 @@
 package com.ravn.treef
 
-import com.ravn.tree._
-import com.ravn.Feature
-
 /**
  * Created by remim on 29/04/14.
  */
@@ -86,6 +83,6 @@ class GiniImportance(val featuresList : List[Feature]) {
 
   def print(results : Map[Feature, Double]) = {
     val printer = (f: Feature, i: Int) => println(f.label + " " + i)
-    normalize(results).foreach(printer.tupled)
+    normalize(results).toList.sortBy(_._2).reverse.foreach(printer.tupled)
   }
 }

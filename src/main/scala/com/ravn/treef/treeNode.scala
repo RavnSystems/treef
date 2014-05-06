@@ -1,8 +1,5 @@
 package com.ravn.treef
 
-import com.ravn.tree.DataPoint
-import com.ravn.Feature
-
 /**
  * Created by remim on 11/04/14.
  */
@@ -40,13 +37,13 @@ class Split(val left: TreeNode,
             threshold: Double,
             val feature: Feature) extends TreeNode {
 
-  override def evaluate(features: DataPoint): List[TreeNode] = {
+  override def evaluate(dp: DataPoint): List[TreeNode] = {
 
     val result =
-      if (features.get(feature).get <= threshold)
-        left.evaluate(features)
+      if (dp.values(feature) <= threshold)
+        left.evaluate(dp)
       else
-        right.evaluate(features)
+        right.evaluate(dp)
 
     this :: result
   }
