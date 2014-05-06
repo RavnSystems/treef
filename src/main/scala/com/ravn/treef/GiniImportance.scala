@@ -1,5 +1,7 @@
 package com.ravn.treef
 
+import java.util
+
 /**
  * Created by remim on 29/04/14.
  */
@@ -21,12 +23,66 @@ class GiniImportance(val featuresList : List[Feature]) {
 
   def meanDecrease(tree: Tree, dataPoints: List[DataPoint]) : Map[Feature, Double] = {
 
-    // here we just count the number of time nodes are called
-    val nodeCount : Map[TreeNode, Int] =
-      dataPoints.map(tree.root.evaluate)
-        .flatten.groupBy(identity).mapValues(_.size)
+    // for each node, we need the number of time it has been called, and the number of positive
+    val catPath : List[(Int, List[TreeNode])] = dataPoints.map(d => (d.c, tree.root.evaluate(d)))
 
-    def getCount(c : TreeNode) : Double =
+    val positives = catPath.filter(_._1 > 0).map(_._2).flatten.groupBy(identity).mapValues(_.size)
+    val totals = catPath.map(_._2).flatten.groupBy(identity).mapValues(_.size)
+
+    val nodeCount : Map[TreeNode, (Int, Int)] =
+      // concatenate with duplicates
+      (totals.toSeq ++ positives.toSeq)
+      // group by node
+      .groupBy(_._1)
+      // only keep counts
+      .mapValues(_.map(_._2))
+      // and transform seq of counts in a tuple
+      .map(e => (e._1, e._2 match {
+        case Seq(t,p) => (t,p)
+        case Seq(t) => (t,0)
+      }))
+
+
+    // we calculate the Gini impurity of all nodes
+
+    val giniImpurity: ((Int, Int)) => Double = { case (t,p) =>
+      1 - math.pow(p.toFloat/t, 2) - math.pow((t-p).toFloat/t, 2)
+    }
+
+    val nodeImpurity = nodeCount.map(e => (e._1, giniImpurity(e._2)))
+
+
+    // then the impurity decrease
+    val getCount = (n:TreeNode) => {
+      if (nodeCount.contains(n))
+        nodeCount(n)._1
+      else 0
+    }
+
+    val getImpurity = (n:TreeNode) => {
+      if (nodeImpurity.contains(n))
+        nodeImpurity(n)
+      else 0
+    }
+
+    def impurityDecrease(node : Split) : Double = {
+      val total   = nodeCount(node)._1
+      val pLeft   = getCount(node.left).toFloat / total
+      val pRight  = getCount(node.right).toFloat / total
+
+      nodeImpurity(node)
+        - pLeft * getImpurity(node.left)
+        - pRight * getImpurity(node.right)
+    }
+
+    val decreases = nodeCount.keys
+      .filter(n => n.isInstanceOf[Split])
+      .asInstanceOf[Iterable[Split]]
+      .map(n => (n, impurityDecrease(n)))
+
+
+
+    /*def getCount(c : TreeNode) : Double =
       if (nodeCount.contains(c)) nodeCount(c).toDouble
       else 0d
 
@@ -65,11 +121,11 @@ class GiniImportance(val featuresList : List[Feature]) {
     val splitDecrease = nodeCountImp
       .filterKeys(n => n.isInstanceOf[Split])
       .asInstanceOf[Map[Split, (Int, Double)]]
-      .map(e => (e._1, decrease(e._1, e._2._1, e._2._2)))
+      .map(e => (e._1, decrease(e._1, e._2._1, e._2._2)))*/
 
 
     // and finally we sum them per feature
-    splitDecrease.groupBy(_._1.feature).map(e => (e._1, e._2.values.sum / e._2.size))
+    decreases.groupBy(_._1.feature).map(e => (e._1, e._2.toMap.values.sum / e._2.size))
   }
 
   // steps : gini impurity for each node / gini decrease for each node / get all nodes for a particular feature
