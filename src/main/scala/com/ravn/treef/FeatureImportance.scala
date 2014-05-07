@@ -22,14 +22,14 @@ object FeatureImportance extends App {
 //  val example = "0 qid:1933 1:1000 2:10 3:1 4:1 5:0 # ccded589-a205-49c9-9c5a-1249083dd3eb"
 //  val datapoint = DataPointReader.convert(example, featuresMap)
 
-//  val dataPoints = DataPointReader.slurp("/tmp/rank_valid.txt", featuresMap)
-  val dataPoints = DataPointReader.slurp("/home/remim/data/MQ2008/Fold1/vali.txt", featuresMap)
+  val dataPoints = DataPointReader.slurp("/tmp/rank_valid.txt", featuresMap)
+//  val dataPoints = DataPointReader.slurp("/home/remim/data/MQ2008/Fold1/vali.txt", featuresMap)
 
   val ranker = new RankerFactory()
 //    .loadRanker("/home/remim/data/xp-sky/model_rank_actor.xml")
 //    .loadRanker("/home/remim/data/xp-sky/model_rank_team.xml")
-//    .loadRanker("/home/remim/data/xp-sky/model_rank_all.xml")
-    .loadRanker("/tmp/mymodel.txt")
+    .loadRanker("/home/remim/data/xp-sky/model_rank_all.xml")
+//    .loadRanker("/tmp/mymodel.txt")
     .asInstanceOf[LambdaMART]
 
   val ensemble = EnsembleBuilder.buildEnsemble(ranker.getEnsemble, featuresMap)

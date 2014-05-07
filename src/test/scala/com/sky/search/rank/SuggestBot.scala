@@ -1,6 +1,6 @@
 package com.sky.search.rank
 
-import dispatch._, Defaults._
+//import dispatch._, Defaults._
 import java.util.UUID
 //import play.api.libs.json.Json
 

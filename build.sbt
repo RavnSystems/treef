@@ -23,9 +23,9 @@ resolvers +=
 
 libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.1.5" /*% "test"*/
 
-libraryDependencies += "com.google.code.gson" % "gson" % "2.2.4"
+//libraryDependencies += "com.google.code.gson" % "gson" % "2.2.4"
 
-libraryDependencies +=
-  "net.databinder.dispatch" %% "dispatch-core" % "0.11.0"
+//libraryDependencies +=
+//  "net.databinder.dispatch" %% "dispatch-core" % "0.11.0"
 
 mainClass := Some("com.ravn.treef.Hi")
