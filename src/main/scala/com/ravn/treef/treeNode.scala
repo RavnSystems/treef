@@ -15,7 +15,7 @@ sealed trait Scorer {
 class Ensemble(val trees: Seq[Tree]) extends Scorer {
 
   override def compute(features: DataPoint): Double = {
-    trees.map(tree => tree.compute(features)).sum / trees.size
+    trees.map(tree => tree.compute(features)).sum
   }
 }
 

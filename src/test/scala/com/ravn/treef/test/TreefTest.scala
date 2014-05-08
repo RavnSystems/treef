@@ -2,7 +2,7 @@ package com.ravn.treef.test
 
 import scala.io.Source
 import com.ravn.treef._
-import ciir.umass.edu.learning.RankerFactory
+import ciir.umass.edu.learning.{DenseDataPoint, RankerFactory}
 import ciir.umass.edu.learning.tree.LambdaMART
 
 /**
@@ -62,8 +62,32 @@ class TreefTest extends UnitSpec {
     val dataset = loadDataset
 
     val gi = new GiniImportance(features46.values.toList)
-    val results = gi.perform(model, dataset)
-    gi.print(results)
+    gi.perform(model, dataset)
+  }
+
+  "some datapoints" should "have the same score with the two libraries" in {
+    val dataset = loadDataset
+    val datasetS = io.Source
+      .fromFile(getClass.getResource("/dataset").getPath)
+      .getLines().map(new DenseDataPoint(_)).toList
+
+    val model = getClass.getResource("/test-model.xml").getPath
+    val ranker = new RankerFactory()
+      .loadRanker(model)
+      .asInstanceOf[LambdaMART]
+
+    val ensemble = EnsembleBuilder.buildEnsemble(ranker.getEnsemble, features46)
+
+    val ranklib00 = ranker.getEnsemble.getTree(0).eval(datasetS(0)) * ranker.getEnsemble.getWeight(0)
+    val treef00 = ensemble.trees(0).compute(dataset(0))
+    assert(ranklib00 == treef00)
+
+    val ranklib01 = ranker.getEnsemble.getTree(0).eval(datasetS(1)) * ranker.getEnsemble.getWeight(1)
+    val treef01 = ensemble.trees(0).compute(dataset(1))
+    assert(ranklib01 == treef01)
+
+    // not strictly equal because of different precision
+    assert((ranker.eval(datasetS(0)) - ensemble.compute(dataset(0))).abs < 0.0001)
   }
 
 }
