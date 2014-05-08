@@ -2,6 +2,8 @@ package com.ravn.treef
 
 import ciir.umass.edu.learning.RankerFactory
 import ciir.umass.edu.learning.tree.LambdaMART
+import scala.collection.immutable.HashMap
+import java.io.File
 
 /**
  * Created by remim on 11/04/14.
@@ -38,7 +40,11 @@ object FeatureImportance extends App {
   val gini = new GiniImportance(featuresList)
   val decrease = gini.perform(ensemble, dataPoints)
 
-  gini.print(decrease)
+//  gini.print(decrease)
+  gini.writeResultSet(
+    new File("/tmp/resultset.csv"),
+    List("Teams" -> decrease, "Actors" -> decrease),
+    featuresList)
 
 //  val r = ensemble.evaluate(datapoint)
 //  dataPoints.foreach(dp => {if (ensemble.evaluate(dp)._1>0) println(dp.get(EnsembleBuilder.entityType))})
@@ -53,5 +59,7 @@ object FeatureImportance extends App {
 
   val n : Double = dataPoints.size
   acc.foreach( e => println(e._1.label + " : " + (e._2 / n )))*/
+
+
 
 }

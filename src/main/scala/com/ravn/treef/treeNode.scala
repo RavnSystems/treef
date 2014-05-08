@@ -19,11 +19,7 @@ class Ensemble(val trees: Seq[Tree]) extends Scorer {
   }
 }
 
-class Tree(val weight: Double, val root : TreeNode) extends /*TreeNode with */Scorer {
-  /*override def evaluate(features: DataPoint): List[TreeNode] = {
-    root.evaluate(features)
-  }*/
-
+class Tree(val weight: Double, val root : TreeNode) extends Scorer {
   override def compute(features: DataPoint): Double =
     weight * root.evaluate(features).last.asInstanceOf[Leaf].output
 }
@@ -32,9 +28,7 @@ class Leaf(val output: Double) extends TreeNode {
   override def evaluate(features: DataPoint): List[TreeNode] = this :: Nil
 }
 
-class Split(val left: TreeNode,
-            val right: TreeNode,
-            threshold: Double,
+class Split(val left: TreeNode, val right: TreeNode, threshold: Double,
             val feature: Feature) extends TreeNode {
 
   override def evaluate(dp: DataPoint): List[TreeNode] = {

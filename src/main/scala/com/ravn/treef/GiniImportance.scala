@@ -1,6 +1,7 @@
 package com.ravn.treef
 
-import java.util
+import com.ravn.treef.Feature
+import java.io.File
 
 /**
  * Created by remim on 29/04/14.
@@ -19,8 +20,6 @@ class GiniImportance(val featuresList : List[Feature]) {
   }
 
   // result is mean decrease for each feature for one tree
-
-
   def meanDecrease(tree: Tree, dataPoints: List[DataPoint]) : Map[Feature, Double] = {
 
     // for each node, we need the number of time it has been called, and the number of positive
@@ -83,17 +82,38 @@ class GiniImportance(val featuresList : List[Feature]) {
       .map(e => (e._1, e._2.toMap.values.sum / e._2.size))
   }
 
-  // steps : gini impurity for each node / gini decrease for each node / get all nodes for a particular feature
-  // gini impurity : proba
 
-  def normalize(results: Map[Feature, Double]) : Map[Feature, Int] = {
-    val m = results.values.reduceLeft(_ max _)
-    results.map(e => (e._1, (e._2*100/m).toInt))
+  // TODO move everything below that line somewhere else
+
+  def normalize(result: Map[Feature, Double]) : Map[Feature, Int] = {
+    val m = result.values.reduceLeft(_ max _)
+    result.map(e => (e._1, (e._2*100/m).toInt))
   }
 
-
-  def print(results : Map[Feature, Double]) = {
+  def print(result : Map[Feature, Double]) = {
     val printer = (f: Feature, i: Int) => println(f.label + " " + i)
-    normalize(results).toList.sortBy(_._2).reverse.foreach(printer.tupled)
+    normalize(result).toList.sortBy(_._2).reverse.foreach(printer.tupled)
+  }
+
+  def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
+    val p = new java.io.PrintWriter(f)
+    try { op(p) } finally { p.close() }
+  }
+
+  def writeResultSet(destination : File, results : List[(String, Map[Feature, Double])], features : List[Feature]){
+    val delimiter = ","
+
+    // header
+    val header = "Title" + delimiter + features.map(_.label).mkString(delimiter)
+
+    // models feature importance
+    val lines = results.map({case (title, result) =>
+        title + delimiter + features.map(
+          f => normalize(result)(f).toString).mkString(delimiter)})
+
+    printToFile(destination)(p => {
+      (header :: lines).foreach(p.println)
+    })
+    
   }
 }
