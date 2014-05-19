@@ -1,6 +1,7 @@
 package com.ravn.treef.test
 
 import com.ravn.treef.{EnsembleBuilder, DataPointReader, Feature, DataPoint}
+import java.nio.file.Paths
 import ciir.umass.edu.learning.DenseDataPoint
 import ciir.umass.edu.learning.RankerFactory
 import ciir.umass.edu.learning.tree.LambdaMART
@@ -24,8 +25,9 @@ object TreefPerf extends App {
 
   val files = (1 to 5).map(path + _).map(_ + "/train.txt")
 
-  val dataset = files.map(DataPointReader.slurp(_, features)).flatten.toList
-  val dataset2 = files.map(io.Source.fromFile(_).getLines().toList).flatten.map(new DenseDataPoint(_)).toList
+  val dataset = files.map(p => DataPointReader.slurp(Paths.get(p), features)).flatten.toList
+  val dataset2 = files.map(io.Source.fromFile(_).getLines().toList)
+    .flatten.map(new DenseDataPoint(_)).toList
 
   def elapsed(start : Date) : Long = {
     TimeUnit.MILLISECONDS.convert(new Date().getTime - start.getTime, TimeUnit.MILLISECONDS)

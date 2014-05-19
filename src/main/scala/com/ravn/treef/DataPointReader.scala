@@ -1,5 +1,7 @@
 package com.ravn.treef
 
+import java.nio.file.Path
+
 /**
  * Created by remim on 11/04/14.
  */
@@ -9,9 +11,18 @@ object DataPointReader {
   val valChar = ":"
   val comChar = "#"
 
-  def slurp(filePath : String,
+  def getNFeatures(filePath : Path) = {
+    val firstLine =
+      io.Source.fromFile(filePath.toString).getLines().next()
+
+    firstLine
+      .split(comChar)(0)
+      .split(splitChar).last.split(valChar)(0).toInt
+  }
+
+  def slurp(filePath : Path,
             features : Map[Int, Feature]) : List[DataPoint] = {
-    io.Source.fromFile(filePath).getLines().toList
+    io.Source.fromFile(filePath.toString).getLines().toList
       .map(line => convert(line, features))
   }
 

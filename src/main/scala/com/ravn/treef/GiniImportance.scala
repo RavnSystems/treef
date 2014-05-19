@@ -1,12 +1,11 @@
 package com.ravn.treef
 
-import com.ravn.treef.Feature
 import java.io.File
 
 /**
  * Created by remim on 29/04/14.
  */
-class GiniImportance(val featuresList : List[Feature]) {
+class GiniImportance(val featuresList : Iterable[Feature]) {
 
   def perform(ensemble : Ensemble, dataPoints : List[DataPoint]) = {
 
@@ -82,38 +81,4 @@ class GiniImportance(val featuresList : List[Feature]) {
       .map(e => (e._1, e._2.toMap.values.sum / e._2.size))
   }
 
-
-  // TODO move everything below that line somewhere else
-
-  def normalize(result: Map[Feature, Double]) : Map[Feature, Int] = {
-    val m = result.values.reduceLeft(_ max _)
-    result.map(e => (e._1, (e._2*100/m).toInt))
-  }
-
-  def print(result : Map[Feature, Double]) = {
-    val printer = (f: Feature, i: Int) => println(f.label + " " + i)
-    normalize(result).toList.sortBy(_._2).reverse.foreach(printer.tupled)
-  }
-
-  def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
-    val p = new java.io.PrintWriter(f)
-    try { op(p) } finally { p.close() }
-  }
-
-  def writeResultSet(destination : File, results : List[(String, Map[Feature, Double])], features : List[Feature]){
-    val delimiter = ","
-
-    // header
-    val header = "Title" + delimiter + features.map(_.label).mkString(delimiter)
-
-    // models feature importance
-    val lines = results.map({case (title, result) =>
-        title + delimiter + features.map(
-          f => normalize(result)(f).toString).mkString(delimiter)})
-
-    printToFile(destination)(p => {
-      (header :: lines).foreach(p.println)
-    })
-    
-  }
 }

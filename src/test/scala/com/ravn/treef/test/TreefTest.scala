@@ -1,17 +1,23 @@
 package com.ravn.treef.test
 
-import scala.io.Source
+import java.io.FileNotFoundException
+import java.nio.file.Paths
 import com.ravn.treef._
 import ciir.umass.edu.learning.{DenseDataPoint, RankerFactory}
 import ciir.umass.edu.learning.tree.LambdaMART
+import org.scalatest._
 
 /**
  * Created by remim on 06/05/14.
  */
 class TreefTest extends UnitSpec {
-  def intToFeat : (Int) => (Int, Feature) = (i:Int) => (i, new Feature(i, "Feature " + i))
-  val features5 = (1 to 5).map(intToFeat).toMap
-  val features46 = (1 to 46).map(intToFeat).toMap
+
+  val features5 = (1 to 5).map(TreefApp.intToFeat).toMap
+  val features46 = (1 to 46).map(TreefApp.intToFeat).toMap
+  
+  val datasetPath = getClass.getResource("/dataset").getPath
+  val modelPath = getClass.getResource("/test-model.xml").getPath
+  val headerPath = getClass.getResource("/header.properties").getPath
 
   "A simple DataPoint" should "be read properly" in {
     val rawdp = "0 qid:1933 1:1000 2:10 3:1 4:1 5:0 # test"
@@ -36,9 +42,8 @@ class TreefTest extends UnitSpec {
   }
 
   def loadModel = {
-    val model = getClass.getResource("/test-model.xml").getPath
     val ranker = new RankerFactory()
-      .loadRanker(model)
+      .loadRanker(modelPath)
       .asInstanceOf[LambdaMART]
 
     EnsembleBuilder.buildEnsemble(ranker.getEnsemble, features46)
@@ -49,8 +54,7 @@ class TreefTest extends UnitSpec {
   }
 
   def loadDataset = {
-    val dataset = getClass.getResource("/dataset").getPath
-    DataPointReader.slurp(dataset, features46)
+    DataPointReader.slurp(Paths.get(datasetPath), features46)
   }
 
   "A dataset" should "be readable" in {
@@ -68,12 +72,11 @@ class TreefTest extends UnitSpec {
   "some datapoints" should "have the same score with the two libraries" in {
     val dataset = loadDataset
     val datasetS = io.Source
-      .fromFile(getClass.getResource("/dataset").getPath)
+      .fromFile(datasetPath)
       .getLines().map(new DenseDataPoint(_)).toList
 
-    val model = getClass.getResource("/test-model.xml").getPath
     val ranker = new RankerFactory()
-      .loadRanker(model)
+      .loadRanker(modelPath)
       .asInstanceOf[LambdaMART]
 
     val ensemble = EnsembleBuilder.buildEnsemble(ranker.getEnsemble, features46)
@@ -88,6 +91,23 @@ class TreefTest extends UnitSpec {
 
     // not strictly equal because of different precision
     assert((ranker.eval(datasetS(0)) - ensemble.compute(dataset(0))).abs < 0.0001)
+  }
+
+  "the app" should "throw RuntimeException when passing wrong argument" in {
+    a [RuntimeException] should be thrownBy {
+      TreefApp.main("blabla".split(" "))
+    }
+    a [FileNotFoundException] should be thrownBy {
+      TreefApp.main("-m model -d dataset".split(" "))
+    }
+    a [RuntimeException] should be thrownBy {
+      TreefApp.main(Array("-m", modelPath, "-d", datasetPath, "-o"))
+    }
+  }
+
+  "the app" should "run properly on test files" in {
+    println("-m " + modelPath + " -d " + "/home/remim/data/MQ2008/Fold1/train.txt")
+    TreefApp.main(Array("-m", modelPath, "-d", "/home/remim/data/MQ2008/Fold1/train.txt"))
   }
 
 }
